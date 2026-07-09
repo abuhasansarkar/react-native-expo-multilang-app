@@ -17,7 +17,7 @@ const TABS: TabConfig[] = [
   { name: "learn", label: "Learn", icon: "book-outline", iconActive: "book" },
   {
     name: "ai-teacher",
-    label: "",
+    label: "AI TEACHER",
     icon: "sparkles-outline",
     iconActive: "sparkles",
   },

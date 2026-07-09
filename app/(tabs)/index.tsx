@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
+import { posthog } from "@/lib/posthog";
 import {
   Platform,
   Pressable,
@@ -129,7 +130,15 @@ export default function HomeScreen() {
         {/* ── Continue Learning Card ───────────────────────────── */}
         <Pressable
           style={({ pressed }) => [styles.continueCard, pressed && { opacity: 0.95 }]}
-          onPress={() => currentLesson && router.push(`/lesson/${currentLesson.id}` as any)}
+          onPress={() => {
+            if (currentLesson) {
+              posthog.capture("home_continue_learning_tapped", {
+                lesson_id: currentLesson.id,
+                lesson_title: currentLesson.title,
+              });
+              router.push(`/lesson/${currentLesson.id}` as any);
+            }
+          }}
         >
           {/* Text side */}
           <View style={styles.continueLeft}>
@@ -169,11 +178,15 @@ export default function HomeScreen() {
                 <Pressable
                   key={activity.key}
                   style={({ pressed }) => [styles.planRow, pressed && { opacity: 0.85 }]}
-                  onPress={() =>
-                    activity.key === "lesson" && currentLesson
-                      ? router.push(`/lesson/${currentLesson.id}` as any)
-                      : undefined
-                  }
+                  onPress={() => {
+                    posthog.capture("home_plan_activity_tapped", {
+                      activity_key: activity.key,
+                      activity_label: activity.label,
+                    });
+                    if (activity.key === "lesson" && currentLesson) {
+                      router.push(`/lesson/${currentLesson.id}` as any);
+                    }
+                  }}
                 >
                   {/* Icon box */}
                   <View style={[styles.planIconBox, { backgroundColor: activity.iconBg }]}>
@@ -216,7 +229,10 @@ export default function HomeScreen() {
             />
           </View>
           {/* Video button */}
-          <Pressable style={styles.videoBtn}>
+          <Pressable
+            style={styles.videoBtn}
+            onPress={() => posthog.capture("home_ai_video_call_tapped")}
+          >
             <Ionicons name="videocam" size={20} color="#fff" />
           </Pressable>
         </View>

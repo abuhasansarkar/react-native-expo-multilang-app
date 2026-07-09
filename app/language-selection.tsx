@@ -3,6 +3,7 @@ import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "reac
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { images } from "@/constants/images";
+import { posthog } from "@/lib/posthog";
 import { LANGUAGES } from "@/data/languages";
 import { Language } from "@/types/learning";
 import { useLanguageStore } from "@/store/languageStore";
@@ -120,6 +121,11 @@ export default function LanguageSelection() {
           style={{ opacity: selected ? 1 : 0.45 }}
           onPress={async () => {
             if (selected) {
+              const lang = LANGUAGES.find((l) => l.code === selected);
+              posthog.capture("language_selected", {
+                language_code: selected,
+                language_name: lang?.name ?? null,
+              });
               await setLanguage(selected);
               router.replace("/");
             }

@@ -1,5 +1,6 @@
 import VerificationModal from "@/components/VerificationModal";
 import { images } from "@/constants/images";
+import { posthog } from "@/lib/posthog";
 import { useSignUp, useSSO } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { type Href, useRouter } from "expo-router";
@@ -36,6 +37,7 @@ export default function SignUp() {
     setVerifyError("");
     await signUp.verifications.verifyEmailCode({ code });
     if (signUp.status === "complete") {
+      posthog.capture("user_signed_up", { method: "email" });
       setModalVisible(false);
       await signUp.finalize({
         navigate: ({ session, decorateUrl }) => {
@@ -205,13 +207,16 @@ function SocialButton({
   const { startSSOFlow } = useSSO();
 
   const handlePress = async () => {
+    posthog.capture("sso_sign_up_started", { strategy });
     try {
       const { createdSessionId, setActive } = await startSSOFlow({ strategy });
       if (createdSessionId && setActive) {
+        posthog.capture("user_signed_up", { method: strategy });
         await setActive({ session: createdSessionId });
         router.replace("/");
       }
     } catch (err) {
+      posthog.captureException(err as Error, { method: strategy });
       console.error("SSO error:", JSON.stringify(err, null, 2));
     }
   };
