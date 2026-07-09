@@ -1,5 +1,5 @@
 import { useAuth, useClerk } from "@clerk/expo";
-import { Redirect } from "expo-router";
+import { Redirect, router } from "expo-router";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -29,10 +29,18 @@ export default function Index() {
           You're signed in. Home screen coming soon.
         </Text>
         <TouchableOpacity
-          onPress={() => signOut()}
+          onPress={() => router.push("/language-selection")}
           style={{ backgroundColor: "#6C4EF5", borderRadius: 18, paddingVertical: 14, paddingHorizontal: 32 }}
         >
           <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 16, color: "#fff" }}>
+            Choose a Language
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => signOut()}
+          style={{ backgroundColor: "#F6F7FB", borderRadius: 18, paddingVertical: 14, paddingHorizontal: 32, borderWidth: 1, borderColor: "#E5E7EB" }}
+        >
+          <Text style={{ fontFamily: "Poppins-SemiBold", fontSize: 16, color: "#0D132B" }}>
             Sign Out
           </Text>
         </TouchableOpacity>
