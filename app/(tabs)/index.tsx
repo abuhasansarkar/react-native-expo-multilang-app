@@ -67,6 +67,15 @@ export default function HomeScreen() {
   const firstName = user?.firstName ?? user?.username ?? "Learner";
   const flagUri = language?.flag;
 
+  const GREETINGS: Record<string, string> = {
+    es: "Hola",
+    fr: "Salut",
+    de: "Hallo",
+    ja: "こんにちは",
+    ar: "مرحبا",
+  };
+  const greetWord = selectedLanguage ? (GREETINGS[selectedLanguage] ?? "Hey") : "Hey";
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colors.background }}>
       <ScrollView
@@ -85,7 +94,7 @@ export default function HomeScreen() {
           </View>
 
           <Text style={styles.greeting}>
-            {language ? `Hola, ${firstName}! 👋` : `Hey, ${firstName}! 👋`}
+            {`${greetWord}, ${firstName}! 👋`}
           </Text>
 
           <View style={styles.headerRight}>
