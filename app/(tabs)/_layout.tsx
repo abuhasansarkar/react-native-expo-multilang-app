@@ -1,4 +1,4 @@
-import { colors, fontFamily } from "@/theme/tokens";
+import { colors } from "@/theme/tokens";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useEffect, useRef } from "react";
@@ -13,24 +13,45 @@ type TabConfig = {
 };
 
 const TABS: TabConfig[] = [
-  { name: "index",      label: "Home",       icon: "home-outline",       iconActive: "home"       },
-  { name: "learn",      label: "Learn",      icon: "book-outline",       iconActive: "book"       },
-  { name: "ai-teacher", label: "AI Teacher", icon: "sparkles-outline",   iconActive: "sparkles"   },
-  { name: "chat",       label: "Chat",       icon: "chatbubble-outline", iconActive: "chatbubble" },
-  { name: "profile",    label: "Profile",    icon: "person-outline",     iconActive: "person"     },
+  { name: "index", label: "Home", icon: "home-outline", iconActive: "home" },
+  { name: "learn", label: "Learn", icon: "book-outline", iconActive: "book" },
+  {
+    name: "ai-teacher",
+    label: "",
+    icon: "sparkles-outline",
+    iconActive: "sparkles",
+  },
+  {
+    name: "chat",
+    label: "Chat",
+    icon: "chatbubble-outline",
+    iconActive: "chatbubble",
+  },
+  {
+    name: "profile",
+    label: "Profile",
+    icon: "person-outline",
+    iconActive: "person",
+  },
 ];
 
 function CustomTabBar({ state, navigation }: any) {
   const insets = useSafeAreaInsets();
 
   // progress: JS-driver only — used for color interpolation (cannot use native driver)
-  const progress = useRef(TABS.map((_, i) => new Animated.Value(i === state.index ? 1 : 0))).current;
+  const progress = useRef(
+    TABS.map((_, i) => new Animated.Value(i === state.index ? 1 : 0)),
+  ).current;
 
   // All of these are native-driver — transforms + opacity only
-  const scales       = useRef(TABS.map(() => new Animated.Value(1))).current;
-  const labelOpacity = useRef(TABS.map((_, i) => new Animated.Value(i === state.index ? 0 : 1))).current;
+  const scales = useRef(TABS.map(() => new Animated.Value(1))).current;
+  const labelOpacity = useRef(
+    TABS.map((_, i) => new Animated.Value(i === state.index ? 0 : 1)),
+  ).current;
   const labelTranslY = useRef(TABS.map(() => new Animated.Value(0))).current;
-  const iconTranslY  = useRef(TABS.map((_, i) => new Animated.Value(i === state.index ? 6 : 0))).current;
+  const iconTranslY = useRef(
+    TABS.map((_, i) => new Animated.Value(i === state.index ? 6 : 0)),
+  ).current;
 
   useEffect(() => {
     TABS.forEach((_, i) => {
@@ -71,8 +92,17 @@ function CustomTabBar({ state, navigation }: any) {
 
     // Native-driver: press bounce — isolated, never in same parallel as JS-driver
     Animated.sequence([
-      Animated.timing(scales[index], { toValue: 0.88, duration: 80, useNativeDriver: true }),
-      Animated.spring(scales[index],  { toValue: 1, useNativeDriver: true, damping: 10, stiffness: 200 }),
+      Animated.timing(scales[index], {
+        toValue: 0.88,
+        duration: 80,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scales[index], {
+        toValue: 1,
+        useNativeDriver: true,
+        damping: 10,
+        stiffness: 200,
+      }),
     ]).start();
 
     const event = navigation.emit({
@@ -87,29 +117,42 @@ function CustomTabBar({ state, navigation }: any) {
 
   return (
     // View — NativeWind className ✅ | shadow via StyleSheet (Platform-specific exception)
-    <View className="tab-bar" style={[shadows.container, { paddingBottom: insets.bottom }]}>
+    <View
+      className="tab-bar"
+      style={[shadows.container, { paddingBottom: insets.bottom }]}
+    >
       <View className="tab-bar__row">
         {TABS.map((tab, index) => {
           const isFocused = state.index === index;
-          const isAI      = tab.name === "ai-teacher";
+          const isAI = tab.name === "ai-teacher";
 
           // Animated color interpolations — useNativeDriver: false, must use style prop
           const activeIconColor = progress[index].interpolate({
-            inputRange:  [0, 1],
+            inputRange: [0, 1],
             outputRange: [colors.textSecondary, colors.linguaPurple],
           });
           const inactiveIconOpacity = progress[index].interpolate({
-            inputRange:  [0, 1],
+            inputRange: [0, 1],
             outputRange: [1, 0],
           });
 
           if (isAI) {
             return (
               // Pressable — style prop exception ✅
-              <Pressable key={tab.name} onPress={() => handlePress(index)} style={pressable.item}>
+              <Pressable
+                key={tab.name}
+                onPress={() => handlePress(index)}
+                style={pressable.item}
+              >
                 {/* Animated.View — StyleSheet for transform exception ✅ */}
-                <Animated.View style={{ transform: [{ scale: scales[index] }], alignItems: "center" }}>
-                  <View className={`tab-bar__ai-btn ${isFocused ? "tab-bar__ai-btn--active" : ""}`}
+                <Animated.View
+                  style={{
+                    transform: [{ scale: scales[index] }],
+                    alignItems: "center",
+                  }}
+                >
+                  <View
+                    className={`tab-bar__ai-btn ${isFocused ? "tab-bar__ai-btn--active" : ""}`}
                     style={isFocused ? shadows.aiActive : shadows.ai}
                   >
                     <Ionicons
@@ -132,7 +175,11 @@ function CustomTabBar({ state, navigation }: any) {
 
           return (
             // Pressable — style prop exception ✅
-            <Pressable key={tab.name} onPress={() => handlePress(index)} style={pressable.item}>
+            <Pressable
+              key={tab.name}
+              onPress={() => handlePress(index)}
+              style={pressable.item}
+            >
               {/*
                 Two separate Animated.View wrappers:
                 - outer: native-driver scale + translateY (transforms only)
@@ -144,23 +191,36 @@ function CustomTabBar({ state, navigation }: any) {
                   height: 40,
                   alignItems: "center",
                   justifyContent: "center",
-                  transform: [{ scale: scales[index] }, { translateY: iconTranslY[index] }],
+                  transform: [
+                    { scale: scales[index] },
+                    { translateY: iconTranslY[index] },
+                  ],
                 }}
               >
                 {/* Active icon — JS-driver opacity on its own node */}
-                <Animated.View style={{ opacity: progress[index], position: "absolute" }}>
-                  <Ionicons name={tab.iconActive} size={24} color={colors.linguaPurple} />
+                <Animated.View
+                  style={{ opacity: progress[index], position: "absolute" }}
+                >
+                  <Ionicons
+                    name={tab.iconActive}
+                    size={24}
+                    color={colors.linguaPurple}
+                  />
                 </Animated.View>
                 {/* Inactive icon — JS-driver opacity on its own node */}
                 <Animated.View style={{ opacity: inactiveIconOpacity }}>
-                  <Ionicons name={tab.icon} size={24} color={colors.textSecondary} />
+                  <Ionicons
+                    name={tab.icon}
+                    size={24}
+                    color={colors.textSecondary}
+                  />
                 </Animated.View>
               </Animated.View>
 
               {/* Native-driver wrapper: opacity + translateY on their own node */}
               <Animated.View
                 style={{
-                  opacity:   labelOpacity[index],
+                  opacity: labelOpacity[index],
                   transform: [{ translateY: labelTranslY[index] }],
                 }}
               >

@@ -29,13 +29,18 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
   },
 
   completeLesson: async (lessonId: string, xpReward: number) => {
-    const { completedLessons, xp } = get();
+    const { completedLessons, xp, streak } = get();
     if (completedLessons.includes(lessonId)) return;
-    const updated = {
+    const payload = {
       xp: xp + xpReward,
+      streak,
       completedLessons: [...completedLessons, lessonId],
     };
-    set(updated);
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify({ ...get(), ...updated }));
+    try {
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
+      set(payload);
+    } catch (e) {
+      console.error("[progressStore] Failed to persist lesson completion:", e);
+    }
   },
 }));
