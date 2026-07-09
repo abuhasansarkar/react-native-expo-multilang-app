@@ -5,10 +5,12 @@ import { router } from "expo-router";
 import { images } from "@/constants/images";
 import { LANGUAGES } from "@/data/languages";
 import { Language } from "@/types/learning";
+import { useLanguageStore } from "@/store/languageStore";
 
 export default function LanguageSelection() {
   const [selected, setSelected] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const { setLanguage } = useLanguageStore();
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -116,8 +118,11 @@ export default function LanguageSelection() {
           className="btn--primary"
           disabled={!selected}
           style={{ opacity: selected ? 1 : 0.45 }}
-          onPress={() => {
-            if (selected) router.replace("/");
+          onPress={async () => {
+            if (selected) {
+              await setLanguage(selected);
+              router.replace("/");
+            }
           }}
         >
           <Text className="btn__label--primary">Start Learning</Text>
