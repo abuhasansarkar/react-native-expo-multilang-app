@@ -1,5 +1,6 @@
 import VerificationModal from "@/components/VerificationModal";
 import { images } from "@/constants/images";
+import { posthog } from "@/lib/posthog";
 import { useSignIn, useSSO } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { type Href, useRouter } from "expo-router";
@@ -35,6 +36,7 @@ export default function SignIn() {
     if (error) return;
 
     if (signIn.status === "complete") {
+      posthog.capture("user_signed_in", { method: "email" });
       await signIn.finalize({ navigate: navigateAfterAuth });
     } else if (signIn.status === "needs_client_trust") {
       const emailFactor = signIn.supportedSecondFactors?.find(
@@ -197,13 +199,16 @@ function SocialButton({
   const { startSSOFlow } = useSSO();
 
   const handlePress = async () => {
+    posthog.capture("sso_sign_in_started", { strategy });
     try {
       const { createdSessionId, setActive } = await startSSOFlow({ strategy });
       if (createdSessionId && setActive) {
+        posthog.capture("user_signed_in", { method: strategy });
         await setActive({ session: createdSessionId });
         router.replace("/");
       }
     } catch (err) {
+      posthog.captureException(err as Error, { method: strategy });
       console.error("SSO error:", JSON.stringify(err, null, 2));
     }
   };

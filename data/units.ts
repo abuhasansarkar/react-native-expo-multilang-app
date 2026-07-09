@@ -23,7 +23,14 @@ export const UNITS: Unit[] = [
     title: "Basics 1",
     description: "Greetings, introductions, and everyday words.",
     order: 1,
-    lessonIds: ["de-lesson-1"],
+    lessonIds: [
+      "de-lesson-1",
+      "de-lesson-2",
+      "de-lesson-3",
+      "de-lesson-4",
+      "de-lesson-5",
+      "de-lesson-6",
+    ],
   },
   {
     id: "ja-unit-1",
@@ -31,7 +38,14 @@ export const UNITS: Unit[] = [
     title: "Basics 1",
     description: "Greetings, introductions, and everyday words.",
     order: 1,
-    lessonIds: ["ja-lesson-1"],
+    lessonIds: [
+      "ja-lesson-1",
+      "ja-lesson-2",
+      "ja-lesson-3",
+      "ja-lesson-4",
+      "ja-lesson-5",
+      "ja-lesson-6",
+    ],
   },
   {
     id: "ar-unit-1",
@@ -39,6 +53,17 @@ export const UNITS: Unit[] = [
     title: "Basics 1",
     description: "Greetings, introductions, and everyday words.",
     order: 1,
-    lessonIds: ["ar-lesson-1"],
+    lessonIds: [
+      "ar-lesson-1",
+      "ar-lesson-2",
+      "ar-lesson-3",
+      "ar-lesson-4",
+      "ar-lesson-5",
+      "ar-lesson-6",
+    ],
   },
 ];
+
+export function getUnitsByLanguage(languageCode: string): Unit[] {
+  return UNITS.filter((unit) => unit.languageCode === languageCode);
+}

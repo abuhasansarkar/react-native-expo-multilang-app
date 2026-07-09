@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { posthog } from "@/lib/posthog";
 
 const STORAGE_KEY = "progress_store";
 
@@ -39,6 +40,12 @@ export const useProgressStore = create<ProgressState>((set, get) => ({
     try {
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
       set(payload);
+      posthog.capture("lesson_completed", {
+        lesson_id: lessonId,
+        xp_earned: xpReward,
+        total_xp: xp + xpReward,
+        total_lessons_completed: completedLessons.length + 1,
+      });
     } catch (e) {
       console.error("[progressStore] Failed to persist lesson completion:", e);
     }
