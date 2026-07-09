@@ -1,7 +1,8 @@
 import VerificationModal from "@/components/VerificationModal";
 import { images } from "@/constants/images";
+import { useSignIn, useSSO } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
+import { type Href, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Image,
@@ -16,8 +17,51 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function SignIn() {
   const router = useRouter();
+  const { signIn, errors, fetchStatus } = useSignIn();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [modalVisible, setModalVisible] = useState(false);
+  const [verifyError, setVerifyError] = useState("");
+
+  const navigateAfterAuth = ({ session, decorateUrl }: { session: any; decorateUrl: (url: string) => string }) => {
+    if (session?.currentTask) return;
+    const url = decorateUrl("/");
+    router.replace(url as Href);
+  };
+
+  const handleSignIn = async () => {
+    setVerifyError("");
+    const { error } = await signIn.password({ emailAddress: email, password });
+    if (error) return;
+
+    if (signIn.status === "complete") {
+      await signIn.finalize({ navigate: navigateAfterAuth });
+    } else if (signIn.status === "needs_client_trust") {
+      const emailFactor = signIn.supportedSecondFactors?.find(
+        (f: any) => f.strategy === "email_code"
+      );
+      if (emailFactor) await signIn.mfa.sendEmailCode();
+      setModalVisible(true);
+    }
+  };
+
+  const handleVerify = async (code: string) => {
+    setVerifyError("");
+    await signIn.mfa.verifyEmailCode({ code });
+    if (signIn.status === "complete") {
+      setModalVisible(false);
+      await signIn.finalize({ navigate: navigateAfterAuth });
+    } else {
+      setVerifyError("Invalid code. Please try again.");
+    }
+  };
+
+  const handleResend = async () => {
+    await signIn.mfa.sendEmailCode();
+  };
+
+  const identifierError = errors?.fields?.identifier?.message;
+  const passwordError = errors?.fields?.password?.message;
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#fff" }}>
@@ -66,12 +110,35 @@ export default function SignIn() {
             style={styles.input}
           />
         </View>
+        {identifierError ? (
+          <Text className="text-error text-[12px] -mt-2">{identifierError}</Text>
+        ) : null}
+
+        {/* Password */}
+        <View className="border border-border rounded-2xl px-4 pt-2.5 pb-3 bg-white mt-3">
+          <Text className="font-sans text-[12px] text-text-secondary mb-0.5">
+            Password
+          </Text>
+          <TextInput
+            value={password}
+            onChangeText={setPassword}
+            placeholder="••••••••"
+            placeholderTextColor="#9CA3AF"
+            secureTextEntry
+            style={styles.input}
+          />
+        </View>
+        {passwordError ? (
+          <Text className="text-error text-[12px] -mt-2">{passwordError}</Text>
+        ) : null}
 
         {/* Sign In Button */}
         <TouchableOpacity
           className="bg-multiLang-purple rounded-[18px] py-[18px] items-center mt-6"
           activeOpacity={0.85}
-          onPress={() => setModalVisible(true)}
+          onPress={handleSignIn}
+          disabled={!email || !password || fetchStatus === "fetching"}
+          style={(!email || !password || fetchStatus === "fetching") ? { opacity: 0.5 } : undefined}
         >
           <Text className="font-semibold text-[17px] text-white">Sign In</Text>
         </TouchableOpacity>
@@ -86,13 +153,8 @@ export default function SignIn() {
         </View>
 
         {/* Social Buttons */}
-        <SocialButton icon="logo-google" label="Continue with Google" />
-        <SocialButton
-          icon="logo-facebook"
-          label="Continue with Facebook"
-          color="#1877F2"
-        />
-        <SocialButton icon="logo-apple" label="Continue with Apple" />
+        <SocialButton icon="logo-google" label="Continue with Google" strategy="oauth_google" />
+        <SocialButton icon="logo-apple" label="Continue with Apple" strategy="oauth_apple" />
 
         {/* Footer */}
         <View className="flex-row justify-center mt-8 mb-2">
@@ -111,6 +173,10 @@ export default function SignIn() {
         visible={modalVisible}
         email={email || "your email"}
         onClose={() => setModalVisible(false)}
+        onVerify={handleVerify}
+        onResend={handleResend}
+        isLoading={fetchStatus === "fetching"}
+        error={verifyError}
       />
     </SafeAreaView>
   );
@@ -119,16 +185,34 @@ export default function SignIn() {
 function SocialButton({
   icon,
   label,
+  strategy,
   color,
 }: {
   icon: React.ComponentProps<typeof Ionicons>["name"];
   label: string;
+  strategy: "oauth_google" | "oauth_apple";
   color?: string;
 }) {
+  const router = useRouter();
+  const { startSSOFlow } = useSSO();
+
+  const handlePress = async () => {
+    try {
+      const { createdSessionId, setActive } = await startSSOFlow({ strategy });
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+        router.replace("/");
+      }
+    } catch (err) {
+      console.error("SSO error:", JSON.stringify(err, null, 2));
+    }
+  };
+
   return (
     <TouchableOpacity
       className="flex-row items-center border border-border rounded-2xl py-3.5 px-5 mb-2.5 bg-white gap-3"
       activeOpacity={0.8}
+      onPress={handlePress}
     >
       <Ionicons name={icon} size={22} color={color ?? "#0D132F"} />
       <Text className="font-medium text-[15px] text-text-primary">{label}</Text>
@@ -137,13 +221,11 @@ function SocialButton({
 }
 
 const styles = StyleSheet.create({
-  // ScrollView contentContainerStyle — must use StyleSheet
   scrollContent: {
     paddingHorizontal: 24,
     paddingTop: 8,
     paddingBottom: 32,
   },
-  // TextInput — padding:0 is RN-specific, not mappable via NativeWind
   input: {
     fontFamily: "Poppins-Regular",
     fontSize: 15,

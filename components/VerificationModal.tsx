@@ -1,4 +1,3 @@
-import { useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -15,10 +14,21 @@ interface Props {
   visible: boolean;
   email: string;
   onClose: () => void;
+  onVerify: (code: string) => Promise<void>;
+  onResend: () => Promise<void>;
+  isLoading?: boolean;
+  error?: string;
 }
 
-export default function VerificationModal({ visible, email, onClose }: Props) {
-  const router = useRouter();
+export default function VerificationModal({
+  visible,
+  email,
+  onClose,
+  onVerify,
+  onResend,
+  isLoading,
+  error,
+}: Props) {
   const [code, setCode] = useState("");
   const inputRef = useRef<TextInput>(null);
 
@@ -29,27 +39,22 @@ export default function VerificationModal({ visible, email, onClose }: Props) {
     }
   }, [visible]);
 
-  function handleChange(text: string) {
+  async function handleChange(text: string) {
     const digits = text.replace(/\D/g, "").slice(0, 6);
     setCode(digits);
     if (digits.length === 6) {
-      setTimeout(() => {
-        onClose();
-        router.replace("/");
-      }, 200);
+      await onVerify(digits);
     }
   }
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      {/* KeyboardAvoidingView — behavior prop requires StyleSheet, not className */}
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.overlay}
       >
         <TouchableOpacity style={StyleSheet.absoluteFill} onPress={onClose} />
 
-        {/* Sheet — static styles, use className */}
         <View className="bg-white rounded-t-[28px] px-6 pt-4 pb-12">
           <View className="w-10 h-1 bg-border rounded-full self-center mb-6" />
 
@@ -61,7 +66,6 @@ export default function VerificationModal({ visible, email, onClose }: Props) {
             <Text className="font-semibold text-text-primary">{email}</Text>
           </Text>
 
-          {/* Hidden real input — position/opacity are dynamic/RN-specific, must use StyleSheet */}
           <TextInput
             ref={inputRef}
             value={code}
@@ -70,9 +74,9 @@ export default function VerificationModal({ visible, email, onClose }: Props) {
             maxLength={6}
             style={styles.hiddenInput}
             caretHidden
+            editable={!isLoading}
           />
 
-          {/* Digit boxes row */}
           <TouchableOpacity
             activeOpacity={1}
             onPress={() => inputRef.current?.focus()}
@@ -95,9 +99,18 @@ export default function VerificationModal({ visible, email, onClose }: Props) {
             ))}
           </TouchableOpacity>
 
+          {error ? (
+            <Text className="text-error text-body-sm text-center mt-4">{error}</Text>
+          ) : null}
+
           <Text className="text-body-sm text-text-secondary text-center mt-6">
             Didn't receive it?{" "}
-            <Text className="text-multiLang-purple font-semibold">Resend</Text>
+            <Text
+              className="text-multiLang-purple font-semibold"
+              onPress={onResend}
+            >
+              Resend
+            </Text>
           </Text>
         </View>
       </KeyboardAvoidingView>
@@ -106,20 +119,17 @@ export default function VerificationModal({ visible, email, onClose }: Props) {
 }
 
 const styles = StyleSheet.create({
-  // KeyboardAvoidingView — behavior/flex/justifyContent not supported via className
   overlay: {
     flex: 1,
     justifyContent: "flex-end",
     backgroundColor: "rgba(0,0,0,0.4)",
   },
-  // TextInput — position:absolute and opacity are dynamic/RN-specific
   hiddenInput: {
     position: "absolute",
     opacity: 0,
     width: 1,
     height: 1,
   },
-  // Digit box — dynamic border/background states driven at runtime
   box: {
     borderWidth: 1.5,
     borderColor: "#E5E7EB",
