@@ -27,7 +27,7 @@ export default function Onboarding() {
             Your AI language
           </Text>
           <View className="flex-row items-baseline">
-            <Text className="font-bold text-[34px] leading-[42px] text-multiLang-purple">
+            <Text className="font-bold text-[34px] leading-[42px] text-multiLang-purple uppercase">
               teacher
             </Text>
             <Text className="font-bold text-[34px] leading-[42px] text-text-primary">
@@ -46,16 +46,13 @@ export default function Onboarding() {
           <View className="w-full items-center">
             {/* Hello bubble — left */}
             <View className="self-start ml-4 bg-[#EEF2FF] rounded-2xl px-4 py-2.5">
-              <Text className="font-semibold text-[15px] text-text-primary">
+              <Text className="font-semibold text-[15px] text-text-primary -mb-4">
                 Hello!
               </Text>
             </View>
 
             {/* ¡Hola! bubble — right */}
-            <View
-              className="self-end mr-4 bg-[#EEF2FF] rounded-2xl px-4 py-2.5"
-              style={{ marginTop: -16 }}
-            >
+            <View className="self-end mr-4 bg-[#EEF2FF] rounded-2xl px-4 py-2.5 ">
               <Text className="font-semibold text-[15px] text-multiLang-purple">
                 ¡Hola!
               </Text>
@@ -64,7 +61,7 @@ export default function Onboarding() {
             {/* Mascot */}
             <Image
               source={images.mascotWelcome}
-              className="w-80 h-80"
+              className="w-80 h-80 -mt-20"
               resizeMode="contain"
             />
 
@@ -83,7 +80,7 @@ export default function Onboarding() {
         {/* Get Started Button */}
         <TouchableOpacity
           className="bg-multiLang-purple rounded-[18px] py-[18px] flex-row items-center justify-center mt-4"
-          onPress={() => router.push("/")}
+          onPress={() => router.push("/(auth)/sign-up")}
           activeOpacity={0.85}
         >
           <Text className="font-semibold text-[17px] text-white">
